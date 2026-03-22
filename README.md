@@ -2,7 +2,9 @@
 
 Wasm (Rust) + three.js + TypeScript で作る3D地形生成 & オブジェクト配置の実験場。
 
-![Winter Mountain Scene](https://img.shields.io/badge/three.js-r183-blue) ![Rust](https://img.shields.io/badge/Rust-Wasm-orange) ![Vite](https://img.shields.io/badge/Vite-8-purple)
+![three.js](https://img.shields.io/badge/three.js-r183-blue) ![Rust](https://img.shields.io/badge/Rust-Wasm-orange) ![Vite](https://img.shields.io/badge/Vite-8-purple) ![React](https://img.shields.io/badge/React-19-61dafb)
+
+![Winter Mountain Scene](docs/screenshot.png)
 
 ## 概要
 
@@ -11,7 +13,7 @@ Wasm (Rust) + three.js + TypeScript で作る3D地形生成 & オブジェクト
 ### 検証テーマ
 
 - **Wasm の適用範囲**: どの処理を Wasm に移すべきか
-- **配置アルゴリズムの比較**: Surface Random / Poisson Disk / Slope Filter
+- **配置アルゴリズムの比較**: Surface Random / Poisson Disk
 - **データ転送コスト**: JS ↔ Wasm の境界設計
 - **描画手法**: InstancedMesh による大量オブジェクト描画
 
@@ -27,10 +29,10 @@ Wasm に地形高さ計算を含めて raycast を排除することで **約24,
 
 ## 技術スタック
 
-- **TypeScript** + **Vite**
+- **React** + **TypeScript** + **Vite**
 - **three.js** (WebGL 描画、OrbitControls)
 - **Rust** → **wasm-pack** (Perlin ノイズ地形生成、配置アルゴリズム)
-- **vite-plugin-wasm**
+- **vite-plugin-wasm** + **@vitejs/plugin-react**
 
 ## セットアップ
 
@@ -66,7 +68,6 @@ npm run dev
 |------------|------|------|
 | Surface Random | 均一ランダム | JS / Wasm |
 | Poisson Disk | 均等間隔 (衝突回避) | JS / Wasm |
-| Slope Filter | 急斜面を避ける | JS |
 
 ### 描画
 - InstancedMesh による大量オブジェクト描画
@@ -78,18 +79,23 @@ npm run dev
 
 ```
 src/
-├── main.ts              # エントリ、UI接続、計測
-├── scene.ts             # three.js シーン、InstancedMesh、シェーダー
-├── terrain.ts           # Perlin ノイズ地形生成 (JS / Wasm)
+├── main.tsx                # エントリ (React root)
+├── App.tsx                 # Wasm初期化、レイアウト
+├── types.ts                # 共有型定義
+├── scene.ts                # three.js シーン、InstancedMesh、シェーダー
+├── terrain.ts              # Perlin ノイズ地形生成 (JS / Wasm)
+├── components/
+│   └── ControlPanel.tsx    # パラメータUI (React)
+├── hooks/
+│   └── useScene.ts         # three.js シーン管理 hook
 └── algorithms/
     ├── surface-random.ts
     ├── poisson-disk.ts
-    ├── slope-filter.ts
     ├── wasm-surface-random.ts
     └── wasm-poisson-disk.ts
 
 crates/terrain-wasm/
-└── src/lib.rs           # Rust Wasm: 地形高さ生成、配置アルゴリズム
+└── src/lib.rs              # Rust Wasm: 地形高さ生成、配置アルゴリズム
 ```
 
 ## License
