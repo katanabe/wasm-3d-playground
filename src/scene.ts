@@ -1,8 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { loadGLTFForInstancing } from "./gltf-loader";
-
-export type ObjectShape = "conifer" | "gltf_dead_trees" | "none";
+export type ObjectShape = "conifer" | "none";
 
 type ShapeDef = {
   geometry: THREE.BufferGeometry;
@@ -142,7 +140,7 @@ function createTerrainMaterial(): THREE.ShaderMaterial {
   });
 }
 
-export async function createScene(canvas: HTMLCanvasElement) {
+export function createScene(canvas: HTMLCanvasElement) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -215,14 +213,8 @@ export async function createScene(canvas: HTMLCanvasElement) {
     conifer: {
       geometry: buildConiferGeometry(),
       material: new THREE.MeshStandardMaterial({ color: 0x2a5540, flatShading: true }),
-      heightOffset: () => -0.1,
-      baseScale: 1.0,
-    },
-    gltf_dead_trees: {
-      geometry: new THREE.BufferGeometry(), // placeholder
-      material: new THREE.MeshStandardMaterial({ color: 0x6a5a4a }),
-      heightOffset: () => 0,
-      baseScale: 0.5, // will adjust after loading
+      heightOffset: () => -0.3,
+      baseScale: 2.5,
     },
     none: {
       geometry: new THREE.BufferGeometry(),
@@ -231,32 +223,6 @@ export async function createScene(canvas: HTMLCanvasElement) {
       baseScale: 1.0,
     },
   };
-
-  // Load glTF model
-  try {
-    const loaded = await loadGLTFForInstancing("/models/dead-trees.glb");
-    // Normalize the model size
-    loaded.geometry.computeBoundingBox();
-    const box = loaded.geometry.boundingBox!;
-    const modelHeight = box.max.y - box.min.y;
-    const targetHeight = 2.0; // roughly same height as conifer
-    const normalizeScale = targetHeight / modelHeight;
-
-    // Apply normalization to geometry
-    loaded.geometry.scale(normalizeScale, normalizeScale, normalizeScale);
-    loaded.geometry.computeBoundingBox();
-    const normalizedBox = loaded.geometry.boundingBox!;
-
-    shapes.gltf_dead_trees = {
-      geometry: loaded.geometry,
-      material: loaded.material,
-      heightOffset: () => 0,
-      baseScale: 1.0,
-    };
-    console.log(`Loaded dead-trees.glb (${modelHeight.toFixed(1)} units → normalized to ${targetHeight}, box min.y=${normalizedBox.min.y.toFixed(3)}, max.y=${normalizedBox.max.y.toFixed(3)}, heightOffset=${(-normalizedBox.min.y).toFixed(3)})`);
-  } catch (e) {
-    console.warn("Failed to load dead-trees.glb:", e);
-  }
 
   let currentShape: ObjectShape = "conifer";
   let instancedMesh: THREE.InstancedMesh | null = null;
@@ -268,7 +234,7 @@ export async function createScene(canvas: HTMLCanvasElement) {
     currentShape = shape;
   }
 
-  function setInstances(positions: Float32Array) {
+  function setInstances(positions: Float32Array, heightBaked = false) {
     if (instancedMesh) {
       scene.remove(instancedMesh);
       instancedMesh.dispose();
@@ -288,12 +254,17 @@ export async function createScene(canvas: HTMLCanvasElement) {
     let placed = 0;
     for (let i = 0; i < count; i++) {
       const x = positions[i * 3];
+      const y = positions[i * 3 + 1];
       const z = positions[i * 3 + 2];
 
-      // Always use raycast for accurate terrain height placement
-      const sampled = getTerrainHeight(x, z);
-      if (sampled === null) continue;
-      const terrainY = sampled;
+      let terrainY: number;
+      if (heightBaked) {
+        terrainY = y;
+      } else {
+        const sampled = getTerrainHeight(x, z);
+        if (sampled === null) continue;
+        terrainY = sampled;
+      }
 
       const scale = (0.5 + Math.random() * 1.0) * shapeDef.baseScale;
       dummy.position.set(x, terrainY + shapeDef.heightOffset(scale), z);

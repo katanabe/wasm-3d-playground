@@ -61,7 +61,7 @@ for (const [input, label] of [
 
 async function main() {
   await ensureWasmInit();
-  const scene = await createScene(canvas);
+  const scene = createScene(canvas);
 
   generateBtn.addEventListener("click", () => {
     const terrainParams = getTerrainParams();
@@ -84,7 +84,7 @@ async function main() {
     const t2 = performance.now();
     const positions = algorithms[algo](count, seed, terrainParams);
     const t3 = performance.now();
-    scene.setInstances(positions);
+    scene.setInstances(positions, isWasmAlgo);
     const t4 = performance.now();
 
     const engine = isWasmAlgo ? "wasm" : "js";
