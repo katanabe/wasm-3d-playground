@@ -2,7 +2,96 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 const TERRAIN_COLOR = new THREE.Color(0x3a5f3a);
-const INSTANCE_COLOR = new THREE.Color(0x44aa88);
+
+export type ObjectShape = "cone" | "sphere" | "box" | "lowpoly_tree" | "rock";
+
+type ShapeDef = {
+  geometry: THREE.BufferGeometry;
+  material: THREE.Material;
+  heightOffset: (scale: number) => number; // how much to lift above terrain
+};
+
+function buildShapes(): Record<ObjectShape, ShapeDef> {
+  return {
+    cone: {
+      geometry: new THREE.ConeGeometry(0.3, 1.0, 6),
+      material: new THREE.MeshStandardMaterial({ color: 0x44aa88 }),
+      heightOffset: (s) => (1.0 * s) / 2,
+    },
+    sphere: {
+      geometry: new THREE.SphereGeometry(0.4, 8, 6),
+      material: new THREE.MeshStandardMaterial({ color: 0x66bb66 }),
+      heightOffset: (s) => 0.4 * s,
+    },
+    box: {
+      geometry: new THREE.BoxGeometry(0.6, 0.6, 0.6),
+      material: new THREE.MeshStandardMaterial({ color: 0x88aa44 }),
+      heightOffset: (s) => (0.6 * s) / 2,
+    },
+    lowpoly_tree: {
+      geometry: buildTreeGeometry(),
+      material: new THREE.MeshStandardMaterial({ color: 0x2d8a4e, flatShading: true }),
+      heightOffset: (s) => 0.05 * s,
+    },
+    rock: {
+      geometry: buildRockGeometry(),
+      material: new THREE.MeshStandardMaterial({ color: 0x888888, flatShading: true }),
+      heightOffset: (s) => 0.15 * s,
+    },
+  };
+}
+
+function buildTreeGeometry(): THREE.BufferGeometry {
+  // Trunk (thin cylinder) + canopy (wide cone)
+  const trunk = new THREE.CylinderGeometry(0.08, 0.1, 0.5, 5);
+  trunk.translate(0, 0.25, 0);
+  const canopy = new THREE.ConeGeometry(0.5, 0.8, 6);
+  canopy.translate(0, 0.9, 0);
+
+  const merged = new THREE.BufferGeometry();
+  // Merge by combining position/normal/index buffers
+  const geoms = [trunk, canopy];
+  const positions: number[] = [];
+  const normals: number[] = [];
+  const indices: number[] = [];
+  let vertexOffset = 0;
+
+  for (const g of geoms) {
+    const pos = g.getAttribute("position");
+    const norm = g.getAttribute("normal");
+    const idx = g.getIndex();
+
+    for (let i = 0; i < pos.count; i++) {
+      positions.push(pos.getX(i), pos.getY(i), pos.getZ(i));
+      normals.push(norm.getX(i), norm.getY(i), norm.getZ(i));
+    }
+    if (idx) {
+      for (let i = 0; i < idx.count; i++) {
+        indices.push(idx.getX(i) + vertexOffset);
+      }
+    }
+    vertexOffset += pos.count;
+  }
+
+  merged.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  merged.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+  merged.setIndex(indices);
+
+  trunk.dispose();
+  canopy.dispose();
+  return merged;
+}
+
+function buildRockGeometry(): THREE.BufferGeometry {
+  const geo = new THREE.DodecahedronGeometry(0.35, 0);
+  // Squash Y a bit for rock-like shape
+  const pos = geo.getAttribute("position");
+  for (let i = 0; i < pos.count; i++) {
+    pos.setY(i, pos.getY(i) * 0.6);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
 
 export function createScene(canvas: HTMLCanvasElement) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -63,31 +152,43 @@ export function createScene(canvas: HTMLCanvasElement) {
     return null;
   }
 
-  // InstancedMesh for placed objects
-  const instanceGeometry = new THREE.ConeGeometry(0.3, 1.0, 6);
-  const instanceMaterial = new THREE.MeshStandardMaterial({ color: INSTANCE_COLOR });
+  // Object shapes
+  const shapes = buildShapes();
+  let currentShape: ObjectShape = "lowpoly_tree";
   let instancedMesh: THREE.InstancedMesh | null = null;
   const dummy = new THREE.Object3D();
 
-  function setInstances(positions: Float32Array) {
+  function setObjectShape(shape: ObjectShape) {
+    currentShape = shape;
+  }
+
+  function setInstances(positions: Float32Array, heightBaked = false) {
     const count = positions.length / 3;
+    const shapeDef = shapes[currentShape];
 
     if (instancedMesh) {
       scene.remove(instancedMesh);
       instancedMesh.dispose();
     }
 
-    instancedMesh = new THREE.InstancedMesh(instanceGeometry, instanceMaterial, count);
+    instancedMesh = new THREE.InstancedMesh(shapeDef.geometry, shapeDef.material, count);
     let placed = 0;
     for (let i = 0; i < count; i++) {
       const x = positions[i * 3];
+      const y = positions[i * 3 + 1];
       const z = positions[i * 3 + 2];
-      const terrainY = getTerrainHeight(x, z);
-      if (terrainY === null) continue;
+
+      let terrainY: number;
+      if (heightBaked) {
+        terrainY = y;
+      } else {
+        const sampled = getTerrainHeight(x, z);
+        if (sampled === null) continue;
+        terrainY = sampled;
+      }
 
       const scale = 0.5 + Math.random() * 1.0;
-      const coneHalfHeight = (1.0 * scale) / 2;
-      dummy.position.set(x, terrainY + coneHalfHeight, z);
+      dummy.position.set(x, terrainY + shapeDef.heightOffset(scale), z);
       dummy.scale.setScalar(scale);
       dummy.updateMatrix();
       instancedMesh.setMatrixAt(placed, dummy.matrix);
@@ -132,6 +233,7 @@ export function createScene(canvas: HTMLCanvasElement) {
 
   return {
     setTerrain,
+    setObjectShape,
     setInstances,
     getFps: () => currentFps,
   };

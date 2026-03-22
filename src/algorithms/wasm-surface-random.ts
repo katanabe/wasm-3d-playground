@@ -1,6 +1,6 @@
 import type { TerrainParams } from "../terrain";
 import init, {
-  surface_random_placement,
+  surface_random_with_height,
 } from "../../crates/terrain-wasm/pkg/terrain_wasm.js";
 
 let initialized = false;
@@ -17,6 +17,14 @@ export function wasmSurfaceRandom(
   seed: number,
   terrain: TerrainParams
 ): Float32Array {
-  const result = surface_random_placement(count, seed, terrain.size);
+  const result = surface_random_with_height(
+    count,
+    seed,
+    terrain.size,
+    terrain.height,
+    terrain.noiseScale,
+    terrain.octaves,
+    terrain.seed
+  );
   return new Float32Array(result);
 }

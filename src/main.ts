@@ -1,5 +1,5 @@
 import "./style.css";
-import { createScene } from "./scene";
+import { createScene, type ObjectShape } from "./scene";
 import { generateTerrainGeometry, generateTerrainGeometryWasm, DEFAULT_TERRAIN, type TerrainParams } from "./terrain";
 import { surfaceRandom } from "./algorithms/surface-random";
 import { poissonDisk } from "./algorithms/poisson-disk";
@@ -26,6 +26,7 @@ const noiseScaleInput = document.getElementById("noise-scale") as HTMLInputEleme
 const noiseScaleValue = document.getElementById("noise-scale-value") as HTMLSpanElement;
 const octavesInput = document.getElementById("octaves") as HTMLInputElement;
 const octavesValue = document.getElementById("octaves-value") as HTMLSpanElement;
+const objectShapeSelect = document.getElementById("object-shape") as HTMLSelectElement;
 const algorithmSelect = document.getElementById("algorithm") as HTMLSelectElement;
 const densityInput = document.getElementById("density") as HTMLInputElement;
 const densityValue = document.getElementById("density-value") as HTMLSpanElement;
@@ -64,6 +65,9 @@ generateBtn.addEventListener("click", () => {
   const terrainParams = getTerrainParams();
   const useWasmTerrain = terrainModeSelect.value === "wasm";
 
+  // Set object shape
+  scene.setObjectShape(objectShapeSelect.value as ObjectShape);
+
   // Generate terrain
   const t0 = performance.now();
   const terrainGeometry = useWasmTerrain
@@ -77,14 +81,17 @@ generateBtn.addEventListener("click", () => {
   const count = parseInt(densityInput.value, 10);
   const seed = parseInt(seedInput.value, 10);
 
+  const isWasmAlgo = algo.startsWith("wasm");
   const t2 = performance.now();
   const positions = algorithms[algo](count, seed, terrainParams);
   const t3 = performance.now();
-  scene.setInstances(positions);
+  scene.setInstances(positions, isWasmAlgo);
+  const t4 = performance.now();
 
   // Update metrics
+  const engine = isWasmAlgo ? "wasm" : "js";
   terrainTimeEl.textContent = `${(t1 - t0).toFixed(2)} (${useWasmTerrain ? "wasm" : "js"})`;
-  computeTimeEl.textContent = `${(t3 - t2).toFixed(2)} (${algo.startsWith("wasm") ? "wasm" : "js"})`;
+  computeTimeEl.textContent = `${(t3 - t2).toFixed(2)} + render ${(t4 - t3).toFixed(2)} (${engine})`;
   instanceCountEl.textContent = String(positions.length / 3);
 });
 
