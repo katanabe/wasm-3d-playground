@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>wasm-3d-playground</title>
+  </head>
+  <body>
+    <div id="control-panel">
+      <h2>Terrain</h2>
+      <label>
+        Height
+        <input id="terrain-height" type="range" min="1" max="30" step="1" value="15" />
+        <span id="terrain-height-value">15</span>
+      </label>
+      <label>
+        Noise Scale
+        <input id="noise-scale" type="range" min="1" max="10" step="0.5" value="3" />
+        <span id="noise-scale-value">3</span>
+      </label>
+      <label>
+        Octaves
+        <input id="octaves" type="range" min="1" max="6" step="1" value="4" />
+        <span id="octaves-value">4</span>
+      </label>
+
+      <h2>Placement</h2>
+      <label>
+        Algorithm
+        <select id="algorithm">
+          <option value="surface_random">Surface Random</option>
+        </select>
+      </label>
+      <label>
+        Count
+        <input id="density" type="range" min="100" max="10000" step="100" value="1000" />
+        <span id="density-value">1000</span>
+      </label>
+      <label>
+        Seed
+        <input id="seed" type="number" value="42" />
+      </label>
+
+      <button id="generate">Generate</button>
+
+      <div id="metrics">
+        <p>Terrain: <span id="terrain-time">-</span> ms</p>
+        <p>Placement: <span id="compute-time">-</span> ms</p>
+        <p>Count: <span id="instance-count">-</span></p>
+        <p>FPS: <span id="fps">-</span></p>
+      </div>
+    </div>
+    <canvas id="canvas"></canvas>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
