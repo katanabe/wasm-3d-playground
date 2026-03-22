@@ -54,7 +54,6 @@ Rust → `wasm-pack build --target web` → `pkg/` にJS bindingsが生成され
 
 ## 注意点
 
-- `crates/` ディレクトリはgit addで `error: does not have a commit checked out` が出る。個別ファイル指定で `git add crates/terrain-wasm/Cargo.toml crates/terrain-wasm/src/lib.rs` する。
 - `renderer.setSize()` がcanvasのCSS幅を上書きしてflex layoutを壊すため、resize時に `canvas.style.width = "100%"` をリセットしてからgetBoundingClientRectする。
 - Perlinノイズの `mulberry32` PRNGはJS/Rust間で同一実装。seed値が同じなら同じ出力。
 - 地形サイズ250、segments 256。DEFAULT_TERRAINは `terrain.ts` に定義。
