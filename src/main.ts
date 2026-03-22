@@ -37,8 +37,6 @@ const computeTimeEl = document.getElementById("compute-time") as HTMLSpanElement
 const instanceCountEl = document.getElementById("instance-count") as HTMLSpanElement;
 const fpsEl = document.getElementById("fps") as HTMLSpanElement;
 
-const scene = createScene(canvas);
-
 function getTerrainParams(): TerrainParams {
   return {
     ...DEFAULT_TERRAIN,
@@ -61,49 +59,45 @@ for (const [input, label] of [
   });
 }
 
-generateBtn.addEventListener("click", () => {
-  const terrainParams = getTerrainParams();
-  const useWasmTerrain = terrainModeSelect.value === "wasm";
-
-  // Set object shape
-  scene.setObjectShape(objectShapeSelect.value as ObjectShape);
-
-  // Generate terrain
-  const t0 = performance.now();
-  const terrainGeometry = useWasmTerrain
-    ? generateTerrainGeometryWasm(terrainParams)
-    : generateTerrainGeometry(terrainParams);
-  const t1 = performance.now();
-  scene.setTerrain(terrainGeometry);
-
-  // Place objects
-  const algo = algorithmSelect.value as AlgorithmType;
-  const count = parseInt(densityInput.value, 10);
-  const seed = parseInt(seedInput.value, 10);
-
-  const isWasmAlgo = algo.startsWith("wasm");
-  const t2 = performance.now();
-  const positions = algorithms[algo](count, seed, terrainParams);
-  const t3 = performance.now();
-  scene.setInstances(positions, isWasmAlgo);
-  const t4 = performance.now();
-
-  // Update metrics
-  const engine = isWasmAlgo ? "wasm" : "js";
-  terrainTimeEl.textContent = `${(t1 - t0).toFixed(2)} (${useWasmTerrain ? "wasm" : "js"})`;
-  computeTimeEl.textContent = `${(t3 - t2).toFixed(2)} + render ${(t4 - t3).toFixed(2)} (${engine})`;
-  instanceCountEl.textContent = String(positions.length / 3);
-});
-
-// Init wasm then run
 async function main() {
   await ensureWasmInit();
+  const scene = await createScene(canvas);
+
+  generateBtn.addEventListener("click", () => {
+    const terrainParams = getTerrainParams();
+    const useWasmTerrain = terrainModeSelect.value === "wasm";
+
+    scene.setObjectShape(objectShapeSelect.value as ObjectShape);
+
+    const t0 = performance.now();
+    const terrainGeometry = useWasmTerrain
+      ? generateTerrainGeometryWasm(terrainParams)
+      : generateTerrainGeometry(terrainParams);
+    const t1 = performance.now();
+    scene.setTerrain(terrainGeometry);
+
+    const algo = algorithmSelect.value as AlgorithmType;
+    const count = parseInt(densityInput.value, 10);
+    const seed = parseInt(seedInput.value, 10);
+
+    const isWasmAlgo = algo.startsWith("wasm");
+    const t2 = performance.now();
+    const positions = algorithms[algo](count, seed, terrainParams);
+    const t3 = performance.now();
+    scene.setInstances(positions);
+    const t4 = performance.now();
+
+    const engine = isWasmAlgo ? "wasm" : "js";
+    terrainTimeEl.textContent = `${(t1 - t0).toFixed(2)} (${useWasmTerrain ? "wasm" : "js"})`;
+    computeTimeEl.textContent = `${(t3 - t2).toFixed(2)} + render ${(t4 - t3).toFixed(2)} (${engine})`;
+    instanceCountEl.textContent = String(positions.length / 3);
+  });
+
   generateBtn.click();
+
+  setInterval(() => {
+    fpsEl.textContent = String(scene.getFps());
+  }, 1000);
 }
 
 main();
-
-// FPS display loop
-setInterval(() => {
-  fpsEl.textContent = String(scene.getFps());
-}, 1000);
