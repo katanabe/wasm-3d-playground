@@ -11,51 +11,48 @@
       <label>
         Engine
         <select id="terrain-mode">
-          <option value="js">JS</option>
           <option value="wasm">Wasm (Rust)</option>
+          <option value="js">JS</option>
         </select>
       </label>
       <label>
         Height
-        <input id="terrain-height" type="range" min="1" max="30" step="1" value="15" />
-        <span id="terrain-height-value">15</span>
+        <input id="terrain-height" type="range" min="1" max="60" step="1" value="30" />
+        <span id="terrain-height-value">30</span>
       </label>
       <label>
         Noise Scale
-        <input id="noise-scale" type="range" min="1" max="10" step="0.5" value="3" />
-        <span id="noise-scale-value">3</span>
+        <input id="noise-scale" type="range" min="1" max="10" step="0.5" value="4" />
+        <span id="noise-scale-value">4</span>
       </label>
       <label>
         Octaves
-        <input id="octaves" type="range" min="1" max="6" step="1" value="4" />
-        <span id="octaves-value">4</span>
+        <input id="octaves" type="range" min="1" max="8" step="1" value="5" />
+        <span id="octaves-value">5</span>
       </label>
 
       <h2>Placement</h2>
       <label>
         Object
         <select id="object-shape">
-          <option value="lowpoly_tree">Lowpoly Tree</option>
-          <option value="cone">Cone</option>
-          <option value="sphere">Sphere</option>
-          <option value="box">Box</option>
-          <option value="rock">Rock</option>
+          <option value="lowpoly_tree">Conifer</option>
+          <option value="none">None</option>
         </select>
       </label>
       <label>
         Algorithm
         <select id="algorithm">
+          <option value="wasm_surface_random">Wasm Surface Random</option>
+          <option value="wasm_poisson_disk">Wasm Poisson Disk</option>
           <option value="surface_random">JS Surface Random</option>
           <option value="poisson_disk">JS Poisson Disk</option>
           <option value="slope_filter">JS Slope Filter</option>
-          <option value="wasm_surface_random">Wasm Surface Random</option>
-          <option value="wasm_poisson_disk">Wasm Poisson Disk</option>
         </select>
       </label>
       <label>
         Count
-        <input id="density" type="range" min="100" max="10000" step="100" value="1000" />
-        <span id="density-value">1000</span>
+        <input id="density" type="range" min="100" max="50000" step="100" value="3000" />
+        <span id="density-value">3000</span>
       </label>
       <label>
         Seed

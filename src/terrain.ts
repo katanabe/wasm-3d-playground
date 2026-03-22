@@ -64,11 +64,11 @@ export type TerrainParams = {
 };
 
 export const DEFAULT_TERRAIN: TerrainParams = {
-  size: 80,
-  segments: 128,
-  height: 15,
-  noiseScale: 3,
-  octaves: 4,
+  size: 250,
+  segments: 256,
+  height: 30,
+  noiseScale: 4,
+  octaves: 5,
   seed: 42,
 };
 
