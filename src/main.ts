@@ -2,11 +2,15 @@ import "./style.css";
 import { createScene } from "./scene";
 import { generateTerrainGeometry, DEFAULT_TERRAIN, type TerrainParams } from "./terrain";
 import { surfaceRandom } from "./algorithms/surface-random";
+import { poissonDisk } from "./algorithms/poisson-disk";
+import { slopeFilter } from "./algorithms/slope-filter";
 
-type AlgorithmType = "surface_random";
+type AlgorithmType = "surface_random" | "poisson_disk" | "slope_filter";
 
 const algorithms: Record<AlgorithmType, (count: number, seed: number, terrain: TerrainParams) => Float32Array> = {
   surface_random: surfaceRandom,
+  poisson_disk: poissonDisk,
+  slope_filter: slopeFilter,
 };
 
 // DOM elements
@@ -73,7 +77,7 @@ generateBtn.addEventListener("click", () => {
   // Update metrics
   terrainTimeEl.textContent = (t1 - t0).toFixed(2);
   computeTimeEl.textContent = (t3 - t2).toFixed(2);
-  instanceCountEl.textContent = String(count);
+  instanceCountEl.textContent = String(positions.length / 3);
 });
 
 // Initial generate
