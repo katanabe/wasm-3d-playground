@@ -5,11 +5,16 @@
 }
 
 body {
-  display: flex;
   height: 100vh;
   font-family: monospace;
   background: #111;
   color: #eee;
+}
+
+#root {
+  display: flex;
+  height: 100vh;
+  width: 100%;
 }
 
 #control-panel {

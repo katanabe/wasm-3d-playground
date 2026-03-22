@@ -6,68 +6,7 @@
     <title>wasm-3d-playground</title>
   </head>
   <body>
-    <div id="control-panel">
-      <h2>Terrain</h2>
-      <label>
-        Engine
-        <select id="terrain-mode">
-          <option value="wasm">Wasm (Rust)</option>
-          <option value="js">JS</option>
-        </select>
-      </label>
-      <label>
-        Height
-        <input id="terrain-height" type="range" min="1" max="60" step="1" value="30" />
-        <span id="terrain-height-value">30</span>
-      </label>
-      <label>
-        Noise Scale
-        <input id="noise-scale" type="range" min="1" max="10" step="0.5" value="4" />
-        <span id="noise-scale-value">4</span>
-      </label>
-      <label>
-        Octaves
-        <input id="octaves" type="range" min="1" max="8" step="1" value="5" />
-        <span id="octaves-value">5</span>
-      </label>
-
-      <h2>Placement</h2>
-      <label>
-        Object
-        <select id="object-shape">
-          <option value="conifer">Conifer</option>
-          <option value="none">None</option>
-        </select>
-      </label>
-      <label>
-        Algorithm
-        <select id="algorithm">
-          <option value="wasm_surface_random">Wasm Surface Random</option>
-          <option value="wasm_poisson_disk">Wasm Poisson Disk</option>
-          <option value="surface_random">JS Surface Random</option>
-          <option value="poisson_disk">JS Poisson Disk</option>
-        </select>
-      </label>
-      <label>
-        Count
-        <input id="density" type="range" min="100" max="50000" step="100" value="3000" />
-        <span id="density-value">3000</span>
-      </label>
-      <label>
-        Seed
-        <input id="seed" type="number" value="42" />
-      </label>
-
-      <button id="generate">Generate</button>
-
-      <div id="metrics">
-        <p>Terrain: <span id="terrain-time">-</span> ms</p>
-        <p>Placement: <span id="compute-time">-</span> ms</p>
-        <p>Count: <span id="instance-count">-</span></p>
-        <p>FPS: <span id="fps">-</span></p>
-      </div>
-    </div>
-    <canvas id="canvas"></canvas>
-    <script type="module" src="/src/main.ts"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

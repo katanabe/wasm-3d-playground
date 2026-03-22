@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-export type ObjectShape = "conifer" | "none";
+import type { ObjectShape } from "./types";
 
 type ShapeDef = {
   geometry: THREE.BufferGeometry;
