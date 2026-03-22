@@ -1,20 +1,25 @@
 import "./style.css";
 import { createScene } from "./scene";
-import { generateTerrainGeometry, DEFAULT_TERRAIN, type TerrainParams } from "./terrain";
+import { generateTerrainGeometry, generateTerrainGeometryWasm, DEFAULT_TERRAIN, type TerrainParams } from "./terrain";
 import { surfaceRandom } from "./algorithms/surface-random";
 import { poissonDisk } from "./algorithms/poisson-disk";
 import { slopeFilter } from "./algorithms/slope-filter";
+import { ensureWasmInit, wasmSurfaceRandom } from "./algorithms/wasm-surface-random";
+import { wasmPoissonDisk } from "./algorithms/wasm-poisson-disk";
 
-type AlgorithmType = "surface_random" | "poisson_disk" | "slope_filter";
+type AlgorithmType = "surface_random" | "poisson_disk" | "slope_filter" | "wasm_surface_random" | "wasm_poisson_disk";
 
 const algorithms: Record<AlgorithmType, (count: number, seed: number, terrain: TerrainParams) => Float32Array> = {
   surface_random: surfaceRandom,
   poisson_disk: poissonDisk,
   slope_filter: slopeFilter,
+  wasm_surface_random: wasmSurfaceRandom,
+  wasm_poisson_disk: wasmPoissonDisk,
 };
 
 // DOM elements
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+const terrainModeSelect = document.getElementById("terrain-mode") as HTMLSelectElement;
 const terrainHeightInput = document.getElementById("terrain-height") as HTMLInputElement;
 const terrainHeightValue = document.getElementById("terrain-height-value") as HTMLSpanElement;
 const noiseScaleInput = document.getElementById("noise-scale") as HTMLInputElement;
@@ -57,10 +62,13 @@ for (const [input, label] of [
 
 generateBtn.addEventListener("click", () => {
   const terrainParams = getTerrainParams();
+  const useWasmTerrain = terrainModeSelect.value === "wasm";
 
   // Generate terrain
   const t0 = performance.now();
-  const terrainGeometry = generateTerrainGeometry(terrainParams);
+  const terrainGeometry = useWasmTerrain
+    ? generateTerrainGeometryWasm(terrainParams)
+    : generateTerrainGeometry(terrainParams);
   const t1 = performance.now();
   scene.setTerrain(terrainGeometry);
 
@@ -75,13 +83,18 @@ generateBtn.addEventListener("click", () => {
   scene.setInstances(positions);
 
   // Update metrics
-  terrainTimeEl.textContent = (t1 - t0).toFixed(2);
-  computeTimeEl.textContent = (t3 - t2).toFixed(2);
+  terrainTimeEl.textContent = `${(t1 - t0).toFixed(2)} (${useWasmTerrain ? "wasm" : "js"})`;
+  computeTimeEl.textContent = `${(t3 - t2).toFixed(2)} (${algo.startsWith("wasm") ? "wasm" : "js"})`;
   instanceCountEl.textContent = String(positions.length / 3);
 });
 
-// Initial generate
-generateBtn.click();
+// Init wasm then run
+async function main() {
+  await ensureWasmInit();
+  generateBtn.click();
+}
+
+main();
 
 // FPS display loop
 setInterval(() => {

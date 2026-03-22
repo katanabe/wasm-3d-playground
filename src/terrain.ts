@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { generate_terrain_heights } from "../crates/terrain-wasm/pkg/terrain_wasm.js";
 
 // Simple 2D value noise with seeded PRNG
 function mulberry32(seed: number): () => number {
@@ -93,6 +94,22 @@ export function generateTerrainGeometry(params: TerrainParams): THREE.BufferGeom
     }
 
     posAttr.setY(i, h * height);
+  }
+
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+export function generateTerrainGeometryWasm(params: TerrainParams): THREE.BufferGeometry {
+  const { size, segments, height, noiseScale, octaves, seed } = params;
+  const geometry = new THREE.PlaneGeometry(size, size, segments, segments);
+  geometry.rotateX(-Math.PI / 2);
+
+  const posAttr = geometry.getAttribute("position");
+  const heights = generate_terrain_heights(size, segments, height, noiseScale, octaves, seed);
+
+  for (let i = 0; i < posAttr.count; i++) {
+    posAttr.setY(i, heights[i]);
   }
 
   geometry.computeVertexNormals();
