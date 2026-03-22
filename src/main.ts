@@ -3,16 +3,14 @@ import { createScene, type ObjectShape } from "./scene";
 import { generateTerrainGeometry, generateTerrainGeometryWasm, DEFAULT_TERRAIN, type TerrainParams } from "./terrain";
 import { surfaceRandom } from "./algorithms/surface-random";
 import { poissonDisk } from "./algorithms/poisson-disk";
-import { slopeFilter } from "./algorithms/slope-filter";
 import { ensureWasmInit, wasmSurfaceRandom } from "./algorithms/wasm-surface-random";
 import { wasmPoissonDisk } from "./algorithms/wasm-poisson-disk";
 
-type AlgorithmType = "surface_random" | "poisson_disk" | "slope_filter" | "wasm_surface_random" | "wasm_poisson_disk";
+type AlgorithmType = "surface_random" | "poisson_disk" | "wasm_surface_random" | "wasm_poisson_disk";
 
 const algorithms: Record<AlgorithmType, (count: number, seed: number, terrain: TerrainParams) => Float32Array> = {
   surface_random: surfaceRandom,
   poisson_disk: poissonDisk,
-  slope_filter: slopeFilter,
   wasm_surface_random: wasmSurfaceRandom,
   wasm_poisson_disk: wasmPoissonDisk,
 };

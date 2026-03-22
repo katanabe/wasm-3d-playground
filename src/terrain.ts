@@ -116,22 +116,3 @@ export function generateTerrainGeometryWasm(params: TerrainParams): THREE.Buffer
   return geometry;
 }
 
-// Sample height at arbitrary (x, z) by finding the terrain triangle
-export function sampleTerrainHeight(
-  x: number,
-  z: number,
-  params: TerrainParams
-): number {
-  const { size, noiseScale, octaves, seed, height } = params;
-  const perm = buildPermutation(seed);
-
-  let h = 0;
-  let amp = 1;
-  let freq = noiseScale / size;
-  for (let o = 0; o < octaves; o++) {
-    h += perlin2D(x * freq, z * freq, perm) * amp;
-    freq *= 2;
-    amp *= 0.5;
-  }
-  return h * height;
-}
